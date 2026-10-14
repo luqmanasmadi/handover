@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Handover Checklist</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1d2433;--mut:#6b7385;--bd:#e3e6ec;--ac:#2563eb;--ok:#16a34a}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#181c25;--tx:#e8ebf2;--mut:#8f97a8;--bd:#2a3040;--ac:#5b8cff;--ok:#34d27a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,sans-serif;padding:16px}
+.w{max-width:860px;margin:auto}
+h1{margin:0 0 4px;font-size:22px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:14px}
+.meta label{font-size:12px;color:var(--mut);display:block}
+input,select,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+.meta input{width:100%}
+.bar{height:10px;background:var(--bd);border-radius:99px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.pt{font-size:13px;color:var(--mut);margin-bottom:14px}
+.sec{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.sec h2{margin:0;padding:10px 14px;font-size:15px;background:color-mix(in srgb,var(--ac) 8%,var(--card));display:flex;justify-content:space-between}
+.sec h2 span{font-weight:400;color:var(--mut);font-size:12px}
+.it{display:grid;grid-template-columns:24px 1fr 150px;gap:8px;padding:9px 14px;border-top:1px solid var(--bd);align-items:start}
+.it.done .t{text-decoration:line-through;color:var(--mut)}
+.it input[type=checkbox]{width:18px;height:18px;margin-top:3px;accent-color:var(--ok)}
+.t small{display:block;color:var(--mut);font-size:12px}
+.it input[type=text]{width:100%;margin-top:4px;font-size:12px;padding:4px 6px}
+.dt{font-size:11px;color:var(--ok)}
+select{width:100%}
+.add{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--bd)}
+.add input{flex:1}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{cursor:pointer}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.x{border:0;background:none;color:var(--mut);padding:0 4px}
+@media(max-width:560px){.it{grid-template-columns:24px 1fr}.it .sl{grid-column:2}}
+@media print{.add,.row,.x{display:none}}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>Handover Checklist</h1>
+<div class="sub">Tick bila siap. Pilih "Handover to". Data simpan dalam browser (guna Export/Import untuk share).</div>
+<div class="meta">
+<div><label>Nama</label><input id="m_name" placeholder="Nama"></div>
+<div><label>Jawatan</label><input id="m_role" placeholder="Jawatan"></div>
+<div><label>Last working day</label><input id="m_lwd" type="date"></div>
+</div>
+<div class="bar"><i id="bar"></i></div>
+<div class="pt" id="pt"></div>
+<div id="app"></div>
+<div class="row">
+<button class="p" id="addsec">+ Seksyen baru</button>
+<button id="exp">Export JSON</button>
+<button id="imp">Import JSON</button>
+<button onclick="window.print()">Print / PDF</button>
+<button id="rst">Reset</button>
+<input type="file" id="file" accept=".json" hidden>
+</div>
+</div>
+<script>
+const PEOPLE=["Naim","Aerma","Fify"];
+const KEY="handover_v1";
+const mk=(t,d="")=>({t,d,done:false,to:"",note:"",at:""});
+const DEF=[
+{n:"1. Pre-Project Commissioning",i:[
+mk("Senarai semua projek pre-commissioning aktif","Nama projek, client, status, PIC, next action"),
+mk("Commissioning plan & schedule","Timeline, milestone, dependency"),
+mk("Commissioning checklist / FAT / SAT docs","Template + status setiap projek"),
+mk("Site readiness & pending issues","Punch list, isu terbuka, blocker"),
+mk("Contact list client, vendor, subcontractor","Nama, no. telefon, email, peranan")]},
+{n:"2. Project Documentation",i:[
+mk("LOA (Letter of Award)","Salinan terkini, tarikh, nilai, scope"),
+mk("Contract & amendments","Contract signed, appendix, SOW, SLA"),
+mk("Costing & budget","Costing sheet, baseline budget, CAPEX, actual vs plan"),
+mk("Variation Order (VO) tracker","VO submitted, approved, pending"),
+mk("PO tracking & invoice / claim status","PO issued, invoice aging, payment pending"),
+mk("Subcontractor & vendor agreements","Status kontrak, payment, performance"),
+mk("Minutes of meeting & correspondence","Email penting, keputusan, action items"),
+mk("Folder dokumen (SharePoint / drive)","Struktur folder, akses, naming convention")]},
+{n:"3. OMEGA",i:[
+mk("Morning update: A-B register ke OMEGA","Prosedur harian: sumber data, format, masa, siapa terima"),
+mk("Akses & kebenaran OMEGA","Transfer / tambah user, role, permission"),
+mk("Panduan langkah demi langkah (SOP)","Screenshot / video ringkas"),
+mk("Isu biasa & cara selesai","Error lazim, workaround, contact support"),
+mk("Shadow session 1-2 hari","Naim / Aerma / Fify cuba buat sendiri, kita semak")]},
+{n:"4. Laporan & Kewangan",i:[
+mk("Laporan berkala (weekly / monthly)","Template, sumber data, penerima, jadual"),
+mk("Projek costing model & files","Excel / sistem, formula, assumption"),
+mk("Pending approval & payment","Claim, advance, PRF, PO belum clear")]},
+{n:"5. Sistem, Akses & Aset",i:[
+mk("Senarai sistem & akaun digunakan","Tools, portal, shared mailbox (jangan tulis password di sini)"),
+mk("Transfer pemilikan fail & email","Shared folder, distribution list, calendar recurring"),
+mk("Pulangkan aset syarikat","Laptop, kad akses, peralatan, dokumen fizikal")]},
+{n:"6. Stakeholder & Transisi",i:[
+mk("Maklumkan client / vendor tentang PIC baru","Email intro + contact baru"),
+mk("Sesi handover berdepan dengan penerima","Walkthrough + Q&A"),
+mk("Tempoh support selepas resign (jika ada)","Berapa lama, channel")]}
+];
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs)return s}catch(e){}return{meta:{name:"",role:"",lwd:""},secs:JSON.parse(JSON.stringify(DEF))}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function render(){
+ const a=document.getElementById("app");a.innerHTML="";
+ let tot=0,dn=0;
+ S.secs.forEach((s,si)=>{
+  const d=s.i.filter(x=>x.done).length;tot+=s.i.length;dn+=d;
+  const el=document.createElement("div");el.className="sec";
+  el.innerHTML=`<h2>${esc(s.n)}<span>${d}/${s.i.length}</span></h2>`+
+  s.i.map((x,ii)=>`<div class="it ${x.done?"done":""}">
+   <input type="checkbox" ${x.done?"checked":""} data-a="chk" data-s="${si}" data-i="${ii}">
+   <div class="t">${esc(x.t)}<button class="x" data-a="del" data-s="${si}" data-i="${ii}" title="Buang">✕</button>${x.d?`<small>${esc(x.d)}</small>`:""}
+   <input type="text" placeholder="Nota / lokasi fail" value="${esc(x.note)}" data-a="note" data-s="${si}" data-i="${ii}">
+   ${x.at?`<span class="dt">Siap: ${esc(x.at)}</span>`:""}</div>
+   <div class="sl"><select data-a="to" data-s="${si}" data-i="${ii}">
+    <option value="">Handover to...</option>${PEOPLE.map(p=>`<option ${x.to===p?"selected":""}>${p}</option>`).join("")}
+   </select></div></div>`).join("")+
+  `<div class="add"><input placeholder="Tambah item..." data-a="newt" data-s="${si}"><button data-a="add" data-s="${si}">Tambah</button></div>`;
+  a.appendChild(el);
+ });
+ const p=tot?Math.round(dn/tot*100):0;
+ document.getElementById("bar").style.width=p+"%";
+ document.getElementById("pt").textContent=`${dn}/${tot} siap (${p}%)`;
+ ["name","role","lwd"].forEach(k=>document.getElementById("m_"+k).value=S.meta[k]||"");
+}
+document.addEventListener("input",e=>{
+ const t=e.target;
+ if(t.id&&t.id.startsWith("m_")){S.meta[t.id.slice(2)]=t.value;save();return}
+ if(t.dataset.a==="note"){S.secs[t.dataset.s].i[t.dataset.i].note=t.value;save()}
+});
+document.addEventListener("change",e=>{
+ const t=e.target,a=t.dataset.a;if(!a)return;
+ const it=S.secs[t.dataset.s]&&S.secs[t.dataset.s].i[t.dataset.i];
+ if(a==="chk"){it.done=t.checked;it.at=t.checked?new Date().toLocaleDateString("en-GB"):"";save();render()}
+ if(a==="to"){it.to=t.value;save()}
+});
+document.addEventListener("click",e=>{
+ const t=e.target,a=t.dataset.a;if(!a)return;
+ if(a==="del"){if(confirm("Buang item ni?")){S.secs[t.dataset.s].i.splice(t.dataset.i,1);save();render()}}
+ if(a==="add"){const inp=t.previousElementSibling;if(inp.value.trim()){S.secs[t.dataset.s].i.push(mk(inp.value.trim()));save();render()}}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.a==="newt")e.target.nextElementSibling.click()});
+document.getElementById("addsec").onclick=()=>{const n=prompt("Nama seksyen:");if(n){S.secs.push({n,i:[]});save();render()}};
+document.getElementById("rst").onclick=()=>{if(confirm("Reset semua?")){S=JSON.parse(JSON.stringify({meta:{name:"",role:"",lwd:""},secs:DEF}));save();render()}};
+document.getElementById("exp").onclick=()=>{const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="handover.json";a.click()};
+document.getElementById("imp").onclick=()=>document.getElementById("file").click();
+document.getElementById("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.secs){S=d;save();render()}}catch(x){alert("File tak sah")}};r.readAsText(f)};
+render();
+</script>
+</body>
+</html>
