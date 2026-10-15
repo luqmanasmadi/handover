@@ -68,7 +68,7 @@ const PEOPLE=["Naim","Aerma","Fify"];
 const KEY="handover_v2";
 const META={name:"Nik Luqman",role:"Senior Project Engineer",lwd:"31 October 2026"};
 const SUM={
-"List of all active pre-commissioning projects":"Projects I currently manage in the pre-commissioning phase. For each one the list shows project name, client, current status, PIC and next action. Takeover should confirm status with each PIC and continue the open follow-ups.",
+"List of all active pre-commissioning projects":"For each one the list shows project name, client, current status, PIC and next action. Takeover should confirm status with each PIC and continue the open follow-ups.",
 "Project documentation":"Core project records I maintain: LOA, contract and amendments, costing and budget, VO tracker, PO tracking with invoice/claim status, and the document folder. Takeover needs these to answer commercial questions and keep costing and billing consistent. Start with the folder structure, then compare the costing sheet against the contract value.",
 "Morning update: A-B register to OMEGA":"Daily task: every morning, transfer the latest entries from the A-B register into OMEGA so OMEGA reflects the current status. Takeover should do it together with me for a few days, then run it alone.",
 "OMEGA access & permissions":"OMEGA accounts and permissions tied to my role. Takeover needs equivalent access before my last day, otherwise the daily update will be blocked.",
@@ -113,7 +113,7 @@ mk("Setup documentation / runbook","Install steps, config files, diagrams, troub
 ];
 const fresh=()=>({meta:{...META},secs:JSON.parse(JSON.stringify(DEF))});
 let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs){DEF.forEach(d=>{if(!s.secs.some(x=>x.n===d.n))s.secs.push(JSON.parse(JSON.stringify(d)))});s.secs.forEach(sc=>sc.i.forEach(x=>{if(x.s===undefined)x.s=SUM[x.t]||""}));return s}}catch(e){}return fresh()}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs){DEF.forEach(d=>{if(!s.secs.some(x=>x.n===d.n))s.secs.push(JSON.parse(JSON.stringify(d)))});s.secs.forEach(sc=>sc.i.forEach(x=>{if(x.s===undefined||x.s==="Projects I currently manage in the pre-commissioning phase. For each one the list shows project name, client, current status, PIC and next action. Takeover should confirm status with each PIC and continue the open follow-ups.")x.s=SUM[x.t]||""}));return s}}catch(e){}return fresh()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function render(){
