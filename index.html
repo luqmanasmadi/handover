@@ -28,6 +28,9 @@ input,select,button{font:inherit;color:var(--tx);background:var(--card);border:1
 .t small{display:block;color:var(--mut);font-size:12px}
 .it input[type=text]{width:100%;margin-top:4px;font-size:12px;padding:4px 6px}
 .dt{font-size:11px;color:var(--ok)}
+.sl2{display:block;font-size:11px;font-weight:600;color:var(--mut);margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+textarea{width:100%;font:inherit;font-size:13px;line-height:1.45;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 8px;resize:vertical;margin-top:2px}
+.it.done textarea{color:var(--mut)}
 select{width:100%}
 .add{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--bd)}
 .add input{flex:1}
@@ -64,7 +67,25 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 const PEOPLE=["Naim","Aerma","Fify"];
 const KEY="handover_v2";
 const META={name:"Nik Luqman",role:"Senior Project Engineer",lwd:"31 October 2026"};
-const mk=(t,d="")=>({t,d,done:false,to:"",note:"",at:""});
+const SUM={
+"List of all active pre-commissioning projects":"Projects I currently manage in the pre-commissioning phase. For each one the list shows project name, client, current status, PIC and next action. Takeover should confirm status with each PIC and continue the open follow-ups.",
+"Project documentation":"Core project records I maintain: LOA, contract and amendments, costing and budget, VO tracker, PO tracking with invoice/claim status, and the document folder. Takeover needs these to answer commercial questions and keep costing and billing consistent. Start with the folder structure, then compare the costing sheet against the contract value.",
+"Morning update: A-B register to OMEGA":"Daily task: every morning, transfer the latest entries from the A-B register into OMEGA so OMEGA reflects the current status. Takeover should do it together with me for a few days, then run it alone.",
+"OMEGA access & permissions":"OMEGA accounts and permissions tied to my role. Takeover needs equivalent access before my last day, otherwise the daily update will be blocked.",
+"Step-by-step guide (SOP)":"Written steps with screenshots or a short video so the daily OMEGA update can be repeated without me.",
+"Common issues & fixes":"Errors and data mismatches I usually run into, the fix for each, and who to contact for support.",
+"Shadow session 1-2 days":"Takeover performs the morning update on their own while I watch and correct. Run this for 1-2 days before my last day.",
+"Pending approval & payment":"Claims, advances, PRFs and POs that are submitted but not yet approved or paid. Takeover must chase approvals so payments are not delayed after I leave. Record the status and approver for each item.",
+"List of systems & accounts used":"Systems, portals and shared mailboxes I use for work. Takeover needs access to each one. Do not record passwords here; request access through IT.",
+"Transfer ownership of files & email":"Files, shared folders, distribution lists and recurring meetings I own. Transfer ownership so nothing is lost when my account is closed.",
+"SIGMA architecture modules for redevelopment":"Handover of the SIGMA architecture so it can be redeveloped: the modules and what each does, how they connect, source code location, database schema, and SRS/SDD documents. Also note the known gaps and what the redevelopment should fix.",
+"NAS / Server setup ready for use":"The NAS/server is built and ready to use. This item records what it is (hardware and OS), how it is connected to the network, and which services run on it (SIGMA S3 storage, Nextcloud + OnlyOffice). Takeover should be able to find and reach it using this note.",
+"Admin access & user accounts":"Who holds admin rights on the NAS/server and which user accounts exist with what folder permissions. Transfer admin ownership to the takeover. Do not record passwords here.",
+"Backup & restore procedure":"How the server data is backed up (schedule and storage location) and the steps to restore it. Takeover should confirm a restore has been tested.",
+"Maintenance & monitoring":"Routine upkeep: OS updates, disk health and uptime checks, and who to contact when the server fails.",
+"Setup documentation / runbook":"One document with install steps, config files, diagrams and a troubleshooting guide, so the server can be rebuilt or fixed without me."
+};
+const mk=(t,d="")=>({t,d,s:SUM[t]||"",done:false,to:"",note:"",at:""});
 const DEF=[
 {n:"1. Pre-Project Commissioning",i:[
 mk("List of all active pre-commissioning projects","Project name, client, status, PIC, next action")]},
@@ -92,7 +113,7 @@ mk("Setup documentation / runbook","Install steps, config files, diagrams, troub
 ];
 const fresh=()=>({meta:{...META},secs:JSON.parse(JSON.stringify(DEF))});
 let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs){DEF.forEach(d=>{if(!s.secs.some(x=>x.n===d.n))s.secs.push(JSON.parse(JSON.stringify(d)))});return s}}catch(e){}return fresh()}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs){DEF.forEach(d=>{if(!s.secs.some(x=>x.n===d.n))s.secs.push(JSON.parse(JSON.stringify(d)))});s.secs.forEach(sc=>sc.i.forEach(x=>{if(x.s===undefined)x.s=SUM[x.t]||""}));return s}}catch(e){}return fresh()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function render(){
@@ -105,6 +126,7 @@ function render(){
   s.i.map((x,ii)=>`<div class="it ${x.done?"done":""}">
    <input type="checkbox" ${x.done?"checked":""} data-a="chk" data-s="${si}" data-i="${ii}">
    <div class="t">${esc(x.t)}<button class="x" data-a="del" data-s="${si}" data-i="${ii}" title="Remove">✕</button>${x.d?`<small>${esc(x.d)}</small>`:""}
+   <label class="sl2">Summary</label><textarea rows="3" placeholder="Summary for the person taking over..." data-a="sum" data-s="${si}" data-i="${ii}">${esc(x.s||"")}</textarea>
    <input type="text" placeholder="Notes / file location" value="${esc(x.note)}" data-a="note" data-s="${si}" data-i="${ii}">
    ${x.at?`<span class="dt">Done: ${esc(x.at)}</span>`:""}</div>
    <div class="sl"><select data-a="to" data-s="${si}" data-i="${ii}">
@@ -122,6 +144,7 @@ document.addEventListener("input",e=>{
  const t=e.target;
  if(t.id&&t.id.startsWith("m_")){S.meta[t.id.slice(2)]=t.value;save();return}
  if(t.dataset.a==="note"){S.secs[t.dataset.s].i[t.dataset.i].note=t.value;save()}
+ if(t.dataset.a==="sum"){S.secs[t.dataset.s].i[t.dataset.i].s=t.value;save()}
 });
 document.addEventListener("change",e=>{
  const t=e.target,a=t.dataset.a;if(!a)return;
