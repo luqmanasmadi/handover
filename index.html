@@ -80,11 +80,19 @@ mk("Shadow session 1-2 days","Naim / Aerma / Fify try it themselves, reviewed to
 mk("Pending approval & payment","Claim, advance, PRF, PO not yet cleared")]},
 {n:"5. Systems & Access",i:[
 mk("List of systems & accounts used","Tools, portals, shared mailbox (do not write passwords here)"),
-mk("Transfer ownership of files & email","Shared folders, distribution lists, recurring calendar events")]}
+mk("Transfer ownership of files & email","Shared folders, distribution lists, recurring calendar events")]},
+{n:"6. SIGMA",i:[
+mk("SIGMA architecture modules for redevelopment","Architecture diagram, module list & responsibilities, source code / repo, database schema, SRS / SDD docs, known gaps & redevelopment plan")]},
+{n:"7. NAS / Server",i:[
+mk("NAS / Server setup ready for use","Hardware & OS specs, network config (IP, DHCP reservation, IT coordination), services running (SIGMA S3 storage, Nextcloud + OnlyOffice)"),
+mk("Admin access & user accounts","Admin / root ownership transfer, user accounts, folder permissions (do not write passwords here)"),
+mk("Backup & restore procedure","Backup schedule, storage location, tested restore steps"),
+mk("Maintenance & monitoring","OS updates, disk health, uptime checks, who to call when it fails"),
+mk("Setup documentation / runbook","Install steps, config files, diagrams, troubleshooting guide")]}
 ];
 const fresh=()=>({meta:{...META},secs:JSON.parse(JSON.stringify(DEF))});
 let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs)return s}catch(e){}return fresh()}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs){DEF.forEach(d=>{if(!s.secs.some(x=>x.n===d.n))s.secs.push(JSON.parse(JSON.stringify(d)))});return s}}catch(e){}return fresh()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function render(){
