@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ms">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -42,17 +42,17 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 <body>
 <div class="w">
 <h1>Handover Checklist</h1>
-<div class="sub">Tick bila siap. Pilih "Handover to". Data simpan dalam browser (guna Export/Import untuk share).</div>
+<div class="sub">Tick when done. Pick who it is handed over to. Data is saved in your browser (use Export/Import to share).</div>
 <div class="meta">
-<div><label>Nama</label><input id="m_name" placeholder="Nama"></div>
-<div><label>Jawatan</label><input id="m_role" placeholder="Jawatan"></div>
-<div><label>Last working day</label><input id="m_lwd" type="date"></div>
+<div><label>Name</label><input id="m_name"></div>
+<div><label>Position</label><input id="m_role"></div>
+<div><label>Last working day</label><input id="m_lwd"></div>
 </div>
 <div class="bar"><i id="bar"></i></div>
 <div class="pt" id="pt"></div>
 <div id="app"></div>
 <div class="row">
-<button class="p" id="addsec">+ Seksyen baru</button>
+<button class="p" id="addsec">+ New section</button>
 <button id="exp">Export JSON</button>
 <button id="imp">Import JSON</button>
 <button onclick="window.print()">Print / PDF</button>
@@ -62,45 +62,29 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 </div>
 <script>
 const PEOPLE=["Naim","Aerma","Fify"];
-const KEY="handover_v1";
+const KEY="handover_v2";
+const META={name:"Nik Luqman",role:"Senior Project Engineer",lwd:"31 October 2026"};
 const mk=(t,d="")=>({t,d,done:false,to:"",note:"",at:""});
 const DEF=[
 {n:"1. Pre-Project Commissioning",i:[
-mk("Senarai semua projek pre-commissioning aktif","Nama projek, client, status, PIC, next action"),
-mk("Commissioning plan & schedule","Timeline, milestone, dependency"),
-mk("Commissioning checklist / FAT / SAT docs","Template + status setiap projek"),
-mk("Site readiness & pending issues","Punch list, isu terbuka, blocker"),
-mk("Contact list client, vendor, subcontractor","Nama, no. telefon, email, peranan")]},
+mk("List of all active pre-commissioning projects","Project name, client, status, PIC, next action")]},
 {n:"2. Project Documentation",i:[
-mk("LOA (Letter of Award)","Salinan terkini, tarikh, nilai, scope"),
-mk("Contract & amendments","Contract signed, appendix, SOW, SLA"),
-mk("Costing & budget","Costing sheet, baseline budget, CAPEX, actual vs plan"),
-mk("Variation Order (VO) tracker","VO submitted, approved, pending"),
-mk("PO tracking & invoice / claim status","PO issued, invoice aging, payment pending"),
-mk("Subcontractor & vendor agreements","Status kontrak, payment, performance"),
-mk("Minutes of meeting & correspondence","Email penting, keputusan, action items"),
-mk("Folder dokumen (SharePoint / drive)","Struktur folder, akses, naming convention")]},
+mk("Project documentation","LOA, contract & amendments, costing & budget, VO tracker, PO tracking & invoice/claim status, document folder")]},
 {n:"3. OMEGA",i:[
-mk("Morning update: A-B register ke OMEGA","Prosedur harian: sumber data, format, masa, siapa terima"),
-mk("Akses & kebenaran OMEGA","Transfer / tambah user, role, permission"),
-mk("Panduan langkah demi langkah (SOP)","Screenshot / video ringkas"),
-mk("Isu biasa & cara selesai","Error lazim, workaround, contact support"),
-mk("Shadow session 1-2 hari","Naim / Aerma / Fify cuba buat sendiri, kita semak")]},
-{n:"4. Laporan & Kewangan",i:[
-mk("Laporan berkala (weekly / monthly)","Template, sumber data, penerima, jadual"),
-mk("Projek costing model & files","Excel / sistem, formula, assumption"),
-mk("Pending approval & payment","Claim, advance, PRF, PO belum clear")]},
-{n:"5. Sistem, Akses & Aset",i:[
-mk("Senarai sistem & akaun digunakan","Tools, portal, shared mailbox (jangan tulis password di sini)"),
-mk("Transfer pemilikan fail & email","Shared folder, distribution list, calendar recurring"),
-mk("Pulangkan aset syarikat","Laptop, kad akses, peralatan, dokumen fizikal")]},
-{n:"6. Stakeholder & Transisi",i:[
-mk("Maklumkan client / vendor tentang PIC baru","Email intro + contact baru"),
-mk("Sesi handover berdepan dengan penerima","Walkthrough + Q&A"),
-mk("Tempoh support selepas resign (jika ada)","Berapa lama, channel")]}
+mk("Morning update: A-B register to OMEGA","Daily procedure: data source, format, timing, who receives"),
+mk("OMEGA access & permissions","Transfer / add users, roles, permissions"),
+mk("Step-by-step guide (SOP)","Screenshots / short video"),
+mk("Common issues & fixes","Usual errors, workarounds, support contact"),
+mk("Shadow session 1-2 days","Naim / Aerma / Fify try it themselves, reviewed together")]},
+{n:"4. Reports & Finance",i:[
+mk("Pending approval & payment","Claim, advance, PRF, PO not yet cleared")]},
+{n:"5. Systems & Access",i:[
+mk("List of systems & accounts used","Tools, portals, shared mailbox (do not write passwords here)"),
+mk("Transfer ownership of files & email","Shared folders, distribution lists, recurring calendar events")]}
 ];
+const fresh=()=>({meta:{...META},secs:JSON.parse(JSON.stringify(DEF))});
 let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs)return s}catch(e){}return{meta:{name:"",role:"",lwd:""},secs:JSON.parse(JSON.stringify(DEF))}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.secs)return s}catch(e){}return fresh()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function render(){
@@ -112,18 +96,18 @@ function render(){
   el.innerHTML=`<h2>${esc(s.n)}<span>${d}/${s.i.length}</span></h2>`+
   s.i.map((x,ii)=>`<div class="it ${x.done?"done":""}">
    <input type="checkbox" ${x.done?"checked":""} data-a="chk" data-s="${si}" data-i="${ii}">
-   <div class="t">${esc(x.t)}<button class="x" data-a="del" data-s="${si}" data-i="${ii}" title="Buang">✕</button>${x.d?`<small>${esc(x.d)}</small>`:""}
-   <input type="text" placeholder="Nota / lokasi fail" value="${esc(x.note)}" data-a="note" data-s="${si}" data-i="${ii}">
-   ${x.at?`<span class="dt">Siap: ${esc(x.at)}</span>`:""}</div>
+   <div class="t">${esc(x.t)}<button class="x" data-a="del" data-s="${si}" data-i="${ii}" title="Remove">✕</button>${x.d?`<small>${esc(x.d)}</small>`:""}
+   <input type="text" placeholder="Notes / file location" value="${esc(x.note)}" data-a="note" data-s="${si}" data-i="${ii}">
+   ${x.at?`<span class="dt">Done: ${esc(x.at)}</span>`:""}</div>
    <div class="sl"><select data-a="to" data-s="${si}" data-i="${ii}">
     <option value="">Handover to...</option>${PEOPLE.map(p=>`<option ${x.to===p?"selected":""}>${p}</option>`).join("")}
    </select></div></div>`).join("")+
-  `<div class="add"><input placeholder="Tambah item..." data-a="newt" data-s="${si}"><button data-a="add" data-s="${si}">Tambah</button></div>`;
+  `<div class="add"><input placeholder="Add item..." data-a="newt" data-s="${si}"><button data-a="add" data-s="${si}">Add</button></div>`;
   a.appendChild(el);
  });
  const p=tot?Math.round(dn/tot*100):0;
  document.getElementById("bar").style.width=p+"%";
- document.getElementById("pt").textContent=`${dn}/${tot} siap (${p}%)`;
+ document.getElementById("pt").textContent=`${dn}/${tot} done (${p}%)`;
  ["name","role","lwd"].forEach(k=>document.getElementById("m_"+k).value=S.meta[k]||"");
 }
 document.addEventListener("input",e=>{
@@ -139,15 +123,15 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("click",e=>{
  const t=e.target,a=t.dataset.a;if(!a)return;
- if(a==="del"){if(confirm("Buang item ni?")){S.secs[t.dataset.s].i.splice(t.dataset.i,1);save();render()}}
+ if(a==="del"){if(confirm("Remove this item?")){S.secs[t.dataset.s].i.splice(t.dataset.i,1);save();render()}}
  if(a==="add"){const inp=t.previousElementSibling;if(inp.value.trim()){S.secs[t.dataset.s].i.push(mk(inp.value.trim()));save();render()}}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.a==="newt")e.target.nextElementSibling.click()});
-document.getElementById("addsec").onclick=()=>{const n=prompt("Nama seksyen:");if(n){S.secs.push({n,i:[]});save();render()}};
-document.getElementById("rst").onclick=()=>{if(confirm("Reset semua?")){S=JSON.parse(JSON.stringify({meta:{name:"",role:"",lwd:""},secs:DEF}));save();render()}};
+document.getElementById("addsec").onclick=()=>{const n=prompt("Section name:");if(n){S.secs.push({n,i:[]});save();render()}};
+document.getElementById("rst").onclick=()=>{if(confirm("Reset everything?")){S=fresh();save();render()}};
 document.getElementById("exp").onclick=()=>{const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="handover.json";a.click()};
 document.getElementById("imp").onclick=()=>document.getElementById("file").click();
-document.getElementById("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.secs){S=d;save();render()}}catch(x){alert("File tak sah")}};r.readAsText(f)};
+document.getElementById("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.secs){S=d;save();render()}}catch(x){alert("Invalid file")}};r.readAsText(f)};
 render();
 </script>
 </body>
